@@ -2,10 +2,10 @@ import { FC } from 'react';
 
 import { Box, List, ListItem, ListItemButton } from '@mui/material';
 
-import { ITodo } from '../../types';
+import { useTodoList } from '../../hooks/todo';
 
 export const TodoList: FC = () => {
-	const { todoList } = useTodoList();
+	const todoList = useTodoList();
 
 	return (
 		<Box>
@@ -18,33 +18,4 @@ export const TodoList: FC = () => {
 			</List>
 		</Box>
 	);
-};
-
-const useTodoList = () => {
-	const todoList: ITodo[] = [
-		{
-			id: 1,
-			work: '할 일 1',
-		},
-		{
-			id: 2,
-			work: '할 일 2',
-		},
-		{
-			id: 3,
-			work: '할 일 3',
-		},
-		{
-			id: 4,
-			work: '할 일 4',
-		},
-		{
-			id: 5,
-			work: '할 일 5',
-		},
-	];
-
-	return {
-		todoList,
-	};
 };
