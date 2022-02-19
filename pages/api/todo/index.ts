@@ -10,8 +10,8 @@ export default (async (req, res) => {
 
 	if (req.method === 'POST') {
 		const work = req.body.work;
-		await createTodo(work);
-		return res.status(200).end();
+		const createdTodo = await createTodo(work);
+		return res.status(200).json(createdTodo);
 	}
 
 	res.status(404).end();
