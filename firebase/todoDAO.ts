@@ -9,7 +9,7 @@ const COLLECTION_NAME = 'todo-for-redux-practice';
 const database = getFirestore(firebaseApp);
 const todoCollection = database.collection(COLLECTION_NAME);
 
-export const getAllTodoList = async () => {
+export const getTodoList = async () => {
 	const querySnapshot = await todoCollection.orderBy('id', 'asc').get();
 
 	return querySnapshot.empty
@@ -18,7 +18,7 @@ export const getAllTodoList = async () => {
 };
 
 export const createTodo = async (work: string) => {
-	const todoList = await getAllTodoList();
+	const todoList = await getTodoList();
 	const todoToCreate = {
 		id: getNewId(todoList),
 		work,

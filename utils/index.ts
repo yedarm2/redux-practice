@@ -3,3 +3,5 @@ export const getNewId = (list: { id: number }[]) => {
 
 	return idList.length > 0 ? idList.sort((a, b) => a - b).reverse()[0] + 1 : 0;
 };
+
+export * as api from './api';

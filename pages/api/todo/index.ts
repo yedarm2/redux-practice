@@ -1,10 +1,10 @@
 import { NextApiHandler } from 'next';
 
-import { getAllTodoList, createTodo } from '../../../firebase';
+import { getTodoList, createTodo } from '../../../firebase';
 
 export default (async (req, res) => {
 	if (req.method === 'GET') {
-		const todoList = await getAllTodoList();
+		const todoList = await getTodoList();
 		return res.status(200).json(todoList);
 	}
 
