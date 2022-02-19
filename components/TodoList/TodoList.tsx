@@ -1,26 +1,27 @@
 import { FC } from 'react';
 
-import { Box, List, ListItem, ListItemButton } from '@mui/material';
+import { Box, List } from '@mui/material';
 
-import { useTodoList } from '../../hooks/todo';
+import { useTodoState } from '../../hooks/todo';
 import { TodoItem } from '../TodoListItem/TodoItem';
+import { TodoItemSkeleton } from './TodoList.style';
 
 export const TodoList: FC = () => {
-	const { todoList } = useTodoListMethods();
+	const { todoList, isLoading } = useTodoList();
 
 	return (
 		<Box>
 			<List>
-				{todoList.map(todo => (
-					<TodoItem key={todo.id} todo={todo} />
-				))}
+				{isLoading
+					? Array.from({ length: 5 }).map((_, index) => <TodoItemSkeleton key={index} />)
+					: todoList.map(todo => <TodoItem key={todo.id} todo={todo} />)}
 			</List>
 		</Box>
 	);
 };
 
-const useTodoListMethods = () => {
-	const todoList = useTodoList();
+const useTodoList = () => {
+	const { todoList, isLoading } = useTodoState();
 
-	return { todoList };
+	return { todoList, isLoading };
 };

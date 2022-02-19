@@ -1,18 +1,21 @@
 import { ITodo } from '../types';
 
-import { createTodo, deleteTodo, initTodoList, updateTodo } from '../store/module/todo';
+import { createTodo, deleteTodo, loadTodoList, updateTodo } from '../store/module/todo';
 import { useAppSelector, useAppDispatch } from './redux';
+import { useEffect } from 'react';
 
-export const useTodoList = () => {
-	return useAppSelector(rootState => rootState.todo.todoList);
+export const useTodoState = () => {
+	const { isLoading, todoList } = useAppSelector(rootState => rootState.todo);
+
+	return { isLoading, todoList };
 };
 
-export const useInitTodoList = () => {
+export const useLoadTodoList = () => {
 	const dispatch = useAppDispatch();
 
-	return (todoList: ITodo[]) => {
-		dispatch(initTodoList(todoList));
-	};
+	useEffect(() => {
+		dispatch(loadTodoList());
+	}, []);
 };
 
 export const useCreateTodo = () => {
