@@ -26,10 +26,11 @@ export const TodoItem: FC<ITodoItemProps> = ({ todo }) => {
 		showTodoEditor,
 		openTodoEditor,
 		closeTodoEditor,
-		onClickDeleteIcon,
 		changeNewTodoWork,
 		onSubmitTodoForm,
-	} = useTodoItem(todo);
+	} = useTodoEditor(todo);
+
+	const { onClickDeleteIcon } = useDeleteTodoIcon(todo);
 
 	return (
 		<ListItem>
@@ -57,7 +58,7 @@ export const TodoItem: FC<ITodoItemProps> = ({ todo }) => {
 	);
 };
 
-const useTodoItem = (todo: ITodo) => {
+const useTodoEditor = (todo: ITodo) => {
 	const [newTodoWork, setNewTodoWork] = useState(todo.work);
 	const [showTodoEditor, setShowTodoEditor] = useState(false);
 
@@ -68,12 +69,6 @@ const useTodoItem = (todo: ITodo) => {
 
 	const closeTodoEditor = () => {
 		setShowTodoEditor(false);
-	};
-
-	const deleteTodo = useDeleteTodo();
-	const onClickDeleteIcon: MouseEventHandler = event => {
-		event.stopPropagation();
-		deleteTodo(todo.id);
 	};
 
 	const changeNewTodoWork: ChangeEventHandler<HTMLInputElement> = event => {
@@ -93,8 +88,19 @@ const useTodoItem = (todo: ITodo) => {
 
 		openTodoEditor,
 		closeTodoEditor,
-		onClickDeleteIcon,
 		changeNewTodoWork,
 		onSubmitTodoForm,
+	};
+};
+
+const useDeleteTodoIcon = (todo: ITodo) => {
+	const deleteTodo = useDeleteTodo();
+	const onClickDeleteIcon: MouseEventHandler = event => {
+		event.stopPropagation();
+		deleteTodo(todo.id);
+	};
+
+	return {
+		onClickDeleteIcon,
 	};
 };
