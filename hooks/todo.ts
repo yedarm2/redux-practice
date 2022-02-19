@@ -1,6 +1,6 @@
 import { ITodo } from '../types';
 
-import { createTodo, deleteTodo, initTodoList } from '../store/module/todo';
+import { createTodo, deleteTodo, initTodoList, updateTodo } from '../store/module/todo';
 import { useAppSelector, useAppDispatch } from './redux';
 
 export const useTodoList = () => {
@@ -23,10 +23,18 @@ export const useCreateTodo = () => {
 	};
 };
 
-export const useDeleteInitTodoList = () => {
+export const useDeleteTodo = () => {
 	const dispatch = useAppDispatch();
 
 	return (id: number) => {
 		dispatch(deleteTodo(id));
+	};
+};
+
+export const useUpdateTodo = () => {
+	const dispatch = useAppDispatch();
+
+	return (id: number, work: string) => {
+		dispatch(updateTodo(id, work));
 	};
 };
