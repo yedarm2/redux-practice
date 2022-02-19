@@ -2,18 +2,17 @@ import { FC } from 'react';
 
 import { Box, List, ListItem, ListItemButton } from '@mui/material';
 
-import { useDeleteInitTodoList, useTodoList } from '../../hooks/todo';
+import { useTodoList } from '../../hooks/todo';
+import { TodoItem } from '../TodoListItem/TodoItem';
 
 export const TodoList: FC = () => {
-	const { todoList, deleteTodo } = useTodoListMethods();
+	const { todoList } = useTodoListMethods();
 
 	return (
 		<Box>
 			<List>
 				{todoList.map(todo => (
-					<ListItem key={todo.id}>
-						<ListItemButton onClick={() => deleteTodo(todo.id)}>{todo.work}</ListItemButton>
-					</ListItem>
+					<TodoItem key={todo.id} todo={todo} />
 				))}
 			</List>
 		</Box>
@@ -22,7 +21,6 @@ export const TodoList: FC = () => {
 
 const useTodoListMethods = () => {
 	const todoList = useTodoList();
-	const deleteTodo = useDeleteInitTodoList();
 
-	return { todoList, deleteTodo };
+	return { todoList };
 };
