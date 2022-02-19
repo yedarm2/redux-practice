@@ -1,53 +1,70 @@
 import { ITodo } from '../../types';
 
-import { PayloadAction } from '@reduxjs/toolkit';
+import { Dispatch } from 'redux';
+
+import { api } from '../../utils';
 import { getNewId } from '../../utils';
 
 const MODULE_NAME = 'todo';
 
+const START_FETCH = `${MODULE_NAME}/START_FETCH` as const;
+const SUCCESS_FETCH = `${MODULE_NAME}/SUCCESS_FETCH` as const;
+const FAIL_FETCH = `${MODULE_NAME}/FAIL_FETCH` as const;
 const INIT_TODO_LIST = `${MODULE_NAME}/INIT_TODO_LIST` as const;
-const CREATE_TODO = `${MODULE_NAME}/CREATE_TODO` as const;
-const DELETE_TODO = `${MODULE_NAME}/DELETE_TODO` as const;
-const UPDATE_TODO = `${MODULE_NAME}/UPDATE_TODO` as const;
+const ADD_TODO = `${MODULE_NAME}/ADD_TODO` as const;
+const REMOVE_TODO = `${MODULE_NAME}/REMOVE_TODO` as const;
+const CHANGE_TODO = `${MODULE_NAME}/CHANGE_TODO` as const;
 
 type TodoState = {
+	isLoading: boolean;
 	todoList: ITodo[];
+	error: any;
 };
 
 const initialState: TodoState = {
+	isLoading: false,
 	todoList: [],
+	error: null,
 };
 
 const reducer = (state = initialState, action: TodoActions) => {
 	switch (action.type) {
+		case START_FETCH:
+			return {
+				...state,
+				isLoading: true,
+				error: null,
+			};
+		case SUCCESS_FETCH:
+			return {
+				...state,
+				isLoading: false,
+			};
+		case FAIL_FETCH:
+			return {
+				...state,
+				isLoading: false,
+				error: action.payload,
+			};
 		case INIT_TODO_LIST:
 			return {
 				...state,
 				todoList: action.payload,
 			};
 
-		case CREATE_TODO:
-			const todoList = state.todoList;
-			const idToCreate = getNewId(todoList);
-
+		case ADD_TODO:
 			return {
 				...state,
-				todoList: [
-					...state.todoList,
-					{
-						id: idToCreate,
-						work: action.payload,
-					},
-				],
+				todoList: [...state.todoList, action.payload],
 			};
 
-		case DELETE_TODO:
+		case REMOVE_TODO:
 			return {
 				...state,
 				todoList: state.todoList.filter(todo => todo.id !== action.payload),
 			};
 
-		case UPDATE_TODO:
+		case CHANGE_TODO:
 			return {
 				...state,
 				todoList: state.todoList.map(todo => {
@@ -68,27 +85,80 @@ const reducer = (state = initialState, action: TodoActions) => {
 export default reducer;
 
 export type TodoActions =
+	| ReturnType<typeof startFetch>
+	| ReturnType<typeof successFetch>
+	| ReturnType<typeof failFetch>
 	| ReturnType<typeof initTodoList>
-	| ReturnType<typeof createTodo>
-	| ReturnType<typeof deleteTodo>
-	| ReturnType<typeof updateTodo>;
+	| ReturnType<typeof addTodo>
+	| ReturnType<typeof removeTodo>
+	| ReturnType<typeof changeTodo>;
+
+const startFetch = () => ({
+	type: START_FETCH,
+});
+
+const successFetch = () => ({
+	type: SUCCESS_FETCH,
+});
+
+const failFetch = (error: any) => ({
+	type: FAIL_FETCH,
+	payload: error,
+});
 
 export const initTodoList = (list: ITodo[]) => ({
 	type: INIT_TODO_LIST,
 	payload: list,
 });
 
-export const createTodo = (work: string) => ({
-	type: CREATE_TODO,
-	payload: work,
+export const addTodo = (todo: ITodo) => ({
+	type: ADD_TODO,
+	payload: todo,
 });
 
-export const deleteTodo = (id: number) => ({
-	type: DELETE_TODO,
+export const removeTodo = (id: number) => ({
+	type: REMOVE_TODO,
 	payload: id,
 });
 
-export const updateTodo = (id: number, work: string) => ({
-	type: UPDATE_TODO,
+export const changeTodo = (id: number, work: string) => ({
+	type: CHANGE_TODO,
 	payload: { id, work },
 });
+
+const todoThunkGenerator = (thunkFunction: (dispatch: Dispatch<TodoActions>) => any) => {
+	return async (dispatch: Dispatch<TodoActions>) => {
+		dispatch(startFetch());
+
+		try {
+			await thunkFunction(dispatch);
+			dispatch(successFetch());
+		} catch (error) {
+			dispatch(failFetch(error));
+		}
+	};
+};
+
+export const loadTodoList = () =>
+	todoThunkGenerator(async (dispatch: Dispatch<TodoActions>) => {
+		const todoList = await api.getTodoList();
+		dispatch(initTodoList(todoList));
+	});
+
+export const createTodo = (work: string) =>
+	todoThunkGenerator(async (dispatch: Dispatch<TodoActions>) => {
+		const createdTodo = await api.createTodo(work);
+		dispatch(addTodo(createdTodo));
+	});
+
+export const deleteTodo = (id: number) =>
+	todoThunkGenerator(async (dispatch: Dispatch<TodoActions>) => {
+		await api.deleteTodo(id);
+		dispatch(removeTodo(id));
+	});
+
+export const updateTodo = (id: number, work: string) =>
+	todoThunkGenerator(async (dispatch: Dispatch<TodoActions>) => {
+		await api.updateTodo(id, work);
+		dispatch(changeTodo(id, work));
+	});

@@ -1,4 +1,4 @@
-import { combineReducers } from 'redux';
+import { combineReducers, Dispatch } from 'redux';
 
 import todoReducer, { TodoActions } from './todo';
 
@@ -7,4 +7,4 @@ export const rootReducer = combineReducers({
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
-export type StoreActions = TodoActions;
+export type StoreActions = TodoActions | ((dispatch: Dispatch) => Promise<any | void>);
