@@ -30,6 +30,7 @@ const useTodoForm = () => {
 	const onSubmit: FormEventHandler = event => {
 		event.preventDefault();
 		createTodo(value);
+		setValue('');
 	};
 
 	return { value, onChange, onSubmit };
