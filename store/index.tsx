@@ -1,14 +1,16 @@
 import { FC } from 'react';
-import { createStore } from 'redux';
 import { Provider } from 'react-redux';
 
 import { rootReducer, rootSaga } from './module';
-import { middlewareEnhancer, sagaMiddleware } from './middleware';
+import { middlewareList, sagaMiddleware } from './middleware';
+import { configureStore } from '@reduxjs/toolkit';
 
-const store = createStore(rootReducer, middlewareEnhancer);
+const store = configureStore({
+	reducer: rootReducer,
+	middleware: getDefaultMiddleware => getDefaultMiddleware().concat(middlewareList),
+});
 
 sagaMiddleware.run(rootSaga);
 
 export const StoreProvider: FC = ({ children }) => <Provider store={store}>{children}</Provider>;
-
-export type { RootState } from './module';
+export type RootState = ReturnType<typeof store.getState>;
