@@ -1,26 +1,12 @@
 import { ITodo } from '../../types';
+import { PayloadAction } from '@reduxjs/toolkit';
 
 import { call, put, takeEvery } from 'redux-saga/effects';
 
 import { api } from '../../utils';
+import { createSlice } from '@reduxjs/toolkit';
 
 const MODULE_NAME = 'todo';
-
-const START_FETCH = `${MODULE_NAME}/START_FETCH` as const;
-const SUCCESS_FETCH = `${MODULE_NAME}/SUCCESS_FETCH` as const;
-const FAIL_FETCH = `${MODULE_NAME}/FAIL_FETCH` as const;
-
-// * reducer용 action
-const SET_TODO_LIST = `${MODULE_NAME}/SET_TODO_LIST` as const;
-const ADD_TODO = `${MODULE_NAME}/ADD_TODO` as const;
-const REMOVE_TODO = `${MODULE_NAME}/REMOVE_TODO` as const;
-const CHANGE_TODO = `${MODULE_NAME}/CHANGE_TODO` as const;
-
-// * saga용 action
-const LOAD_TODO_LIST = `${MODULE_NAME}/LOAD_TODO_LIST` as const;
-const CREATE_TODO = `${MODULE_NAME}/CREATE_TODO` as const;
-const DELETE_TODO = `${MODULE_NAME}/DELETE_TODO` as const;
-const UPDATE_TODO = `${MODULE_NAME}/UPDATE_TODO` as const;
 
 type TodoState = {
 	isLoading: boolean;
@@ -34,62 +20,85 @@ const initialState: TodoState = {
 	error: null,
 };
 
-const reducer = (state = initialState, action: TodoActions) => {
-	switch (action.type) {
-		case START_FETCH:
+const todoSlice = createSlice({
+	name: MODULE_NAME,
+	initialState,
+	reducers: {
+		startFetch(state) {
 			return {
 				...state,
 				isLoading: true,
 				error: null,
 			};
-		case SUCCESS_FETCH:
+		},
+		successFetch(state) {
 			return {
 				...state,
 				isLoading: false,
 			};
-		case FAIL_FETCH:
-			return {
-				...state,
-				isLoading: false,
-				error: action.error,
-			};
-		case SET_TODO_LIST:
-			return {
-				...state,
-				todoList: action.payload,
-			};
+		},
+		failFetch: {
+			reducer(state, action: PayloadAction<any>) {
+				return {
+					...state,
+					isLoading: false,
+					error: action.payload,
+				};
+			},
+			prepare(error: any) {
+				return { payload: error };
+			},
+		},
+		setTodoList(state, action: PayloadAction<ITodo[]>) {
+			state.todoList = action.payload;
+		},
+		addTodo(state, action: PayloadAction<ITodo>) {
+			state.todoList.push(action.payload);
+		},
+		removeTodo(state, action: PayloadAction<number>) {
+			state.todoList = state.todoList.filter(todo => todo.id !== action.payload);
+		},
+		changeTodo: {
+			reducer(state, action: PayloadAction<{ id: number; work: string }>) {
+				const { payload } = action;
+				const indexToChange = state.todoList.findIndex(todo => todo.id === payload.id);
+				if (indexToChange === -1) return;
 
-		case ADD_TODO:
-			return {
-				...state,
-				todoList: [...state.todoList, action.payload],
-			};
+				state.todoList[indexToChange].work = payload.work;
+			},
+			prepare: (id: number, work: string) => ({ payload: { id, work } }),
+		},
+		loadTodoList() {},
+		createTodo: {
+			reducer() {},
+			prepare: (work: string) => ({ payload: work }),
+		},
+		deleteTodo: {
+			reducer() {},
+			prepare: (id: number) => ({ payload: id }),
+		},
+		updateTodo: {
+			reducer() {},
+			prepare: (id: number, work: string) => ({ payload: { id, work } }),
+		},
+	},
+});
 
-		case REMOVE_TODO:
-			return {
-				...state,
-				todoList: state.todoList.filter(todo => todo.id !== action.payload),
-			};
+export default todoSlice.reducer;
 
-		case CHANGE_TODO:
-			return {
-				...state,
-				todoList: state.todoList.map(todo => {
-					if (todo.id !== action.payload.id) return todo;
-
-					return {
-						id: todo.id,
-						work: action.payload.work,
-					};
-				}),
-			};
-
-		default:
-			return state;
-	}
-};
-
-export default reducer;
+export const {
+	startFetch,
+	successFetch,
+	failFetch,
+	setTodoList,
+	addTodo,
+	removeTodo,
+	changeTodo,
+	loadTodoList,
+	createTodo,
+	deleteTodo,
+	updateTodo,
+} = todoSlice.actions;
 
 export type TodoActions =
 	| ReturnType<typeof startFetch>
@@ -104,41 +113,8 @@ export type TodoActions =
 	| ReturnType<typeof deleteTodo>
 	| ReturnType<typeof updateTodo>;
 
-const startFetch = () => ({
-	type: START_FETCH,
-});
-
-const successFetch = () => ({
-	type: SUCCESS_FETCH,
-});
-
-const failFetch = (error: any) => ({
-	type: FAIL_FETCH,
-	error,
-});
-
-const setTodoList = (list: ITodo[]) => ({
-	type: SET_TODO_LIST,
-	payload: list,
-});
-
-export const addTodo = (todo: ITodo) => ({
-	type: ADD_TODO,
-	payload: todo,
-});
-
-export const removeTodo = (id: number) => ({
-	type: REMOVE_TODO,
-	payload: id,
-});
-
-export const changeTodo = (id: number, work: string) => ({
-	type: CHANGE_TODO,
-	payload: { id, work },
-});
-
 const createTodoSagaFunction = (sagaFunction: (action: any) => Generator<any, any, any>) => {
-	return function* (action: TodoActions) {
+	return function* (action: any) {
 		yield put(startFetch());
 
 		try {
@@ -150,51 +126,30 @@ const createTodoSagaFunction = (sagaFunction: (action: any) => Generator<any, an
 	};
 };
 
-export const loadTodoList = () => ({
-	type: LOAD_TODO_LIST,
-});
-export const loadTodoListSaga = createTodoSagaFunction(function* () {
+const loadTodoListSaga = createTodoSagaFunction(function* () {
 	const todoList: ITodo[] = yield call(api.getTodoList);
 	yield put(setTodoList(todoList));
 });
 
-export const createTodo = (work: string) => ({
-	type: CREATE_TODO,
-	payload: work,
-});
-export const createTodoSaga = createTodoSagaFunction(function* (
-	action: ReturnType<typeof createTodo>,
-) {
+const createTodoSaga = createTodoSagaFunction(function* (action: ReturnType<typeof createTodo>) {
 	const createdTodo = yield call(api.createTodo, action.payload);
 	yield put(addTodo(createdTodo));
 });
 
-export const deleteTodo = (id: number) => ({
-	type: DELETE_TODO,
-	payload: id,
-});
-export const deleteTodoSaga = createTodoSagaFunction(function* (
-	action: ReturnType<typeof deleteTodo>,
-) {
+const deleteTodoSaga = createTodoSagaFunction(function* (action: ReturnType<typeof deleteTodo>) {
 	yield call(api.deleteTodo, action.payload);
 	yield put(removeTodo(action.payload));
 });
 
-export const updateTodo = (id: number, work: string) => ({
-	type: UPDATE_TODO,
-	payload: { id, work },
-});
-export const updateTodoSaga = createTodoSagaFunction(function* (
-	action: ReturnType<typeof updateTodo>,
-) {
+const updateTodoSaga = createTodoSagaFunction(function* (action: ReturnType<typeof updateTodo>) {
 	const { id, work } = action.payload;
 	yield call(api.updateTodo, id, work);
 	yield put(changeTodo(id, work));
 });
 
 export const todoSaga = function* () {
-	yield takeEvery(LOAD_TODO_LIST, loadTodoListSaga);
-	yield takeEvery(CREATE_TODO, createTodoSaga);
-	yield takeEvery(DELETE_TODO, deleteTodoSaga);
-	yield takeEvery(UPDATE_TODO, updateTodoSaga);
+	yield takeEvery(loadTodoList.type, loadTodoListSaga);
+	yield takeEvery(createTodo.type, createTodoSaga);
+	yield takeEvery(deleteTodo.type, deleteTodoSaga);
+	yield takeEvery(updateTodo.type, updateTodoSaga);
 };
