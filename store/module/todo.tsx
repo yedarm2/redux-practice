@@ -44,9 +44,9 @@ const reducer = (state = initialState, action: TodoActions) => {
 			return {
 				...state,
 				isLoading: false,
-				error: action.payload,
+				error: action.error,
 			};
-		case INIT_TODO_LIST:
+		case SET_TODO_LIST:
 			return {
 				...state,
 				todoList: action.payload,
@@ -88,7 +88,7 @@ export type TodoActions =
 	| ReturnType<typeof startFetch>
 	| ReturnType<typeof successFetch>
 	| ReturnType<typeof failFetch>
-	| ReturnType<typeof initTodoList>
+	| ReturnType<typeof setTodoList>
 	| ReturnType<typeof addTodo>
 	| ReturnType<typeof removeTodo>
 	| ReturnType<typeof changeTodo>;
@@ -103,11 +103,11 @@ const successFetch = () => ({
 
 const failFetch = (error: any) => ({
 	type: FAIL_FETCH,
-	payload: error,
+	error,
 });
 
-export const initTodoList = (list: ITodo[]) => ({
-	type: INIT_TODO_LIST,
+const setTodoList = (list: ITodo[]) => ({
+	type: SET_TODO_LIST,
 	payload: list,
 });
 
