@@ -3,7 +3,6 @@ import { ITodo } from '../../types';
 import { Dispatch } from 'redux';
 
 import { api } from '../../utils';
-import { getNewId } from '../../utils';
 
 const MODULE_NAME = 'todo';
 
